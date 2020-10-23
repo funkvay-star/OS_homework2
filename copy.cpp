@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
 	{
 		//we find where starts hole
 		hole = lseek(file, offset, SEEK_HOLE);
-		source_logical  += hole - data;
+		source_physical  += hole - data;
 
 		//offset = from 0 to the hole start
 		offset = hole;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 		//we write in buffer data that is in file and then rewrite in write_in_file
 		lseek(file, -buffer_size, SEEK_CUR);
 		read(file, buffer, buffer_size);
-		destination_logical += write(write_in_file, buffer, buffer_size);
+		destination_physical += write(write_in_file, buffer, buffer_size);
 		
 
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 
 				//in write_in_file we write holes from file
 				lseek(write_in_file, data - hole, SEEK_END);
-				destination_physical += data - hole;
+				destination_logical += data - hole;
 				
 				break;
 			}
@@ -85,11 +85,11 @@ int main(int argc, char* argv[])
 				return -1;
 			}
 		}
-		source_physical += data - hole;
+		source_logical += data - hole;
 		
 		offset = data;
 		lseek(write_in_file, data - hole, SEEK_END);
-		destination_physical += data - hole;
+		destination_logical += data - hole;
 	}
 	std::cout << "Source physical: " << source_physical << ", Source logical: " << source_logical;
 	std::cout << ", Destination physical: " << destination_physical;
