@@ -15,23 +15,24 @@ int main(int argc, char* argv[])
 	int file = open(argv[1], O_RDONLY);
 	
 
-	//char* file1 = argv[1];
-	//char* file2 = argv[2];
 
+	//if there is file = -1 then there is a  problem and we can't open file  
 	if(file == -1)
 	{
 		std::cout << "I couldn't open file \n";
-		exit(errno);//return 0;
+		exit(errno);
 	}
 
-	int write_in_file = open(argv[2], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
+	//if there is write_in_file = -1 then there is a problem and we can't open file
+	int write_in_file = open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
 	if(write_in_file == -1)
 	{
 		std::cout << "I couldn't open file  \n";
 		exit(errno);//return 0;
 	}
 
-	long bytes = 0, hole = 0, data = 0, offset = 0;
+
+	long hole = 0, data = 0, offset = 0;
 
 	long source_physical = 0, destination_physical = 0, source_logical = 0, destination_logical = 0;
 
@@ -40,40 +41,44 @@ int main(int argc, char* argv[])
 
 	while(true)
 	{
+		//we find where starts hole
 		hole = lseek(file, offset, SEEK_HOLE);
 		source_logical  += hole - data;
-		
+
+		//offset = from 0 to the hole start
 		offset = hole;
 
-		//std::cout << hole << " " << data << "\n";
-		
+		//create string
 		buffer_size = hole - data;
 		buffer = new char[buffer_size];
 
+
+		//we write in buffer data that is in file and then rewrite in write_in_file
 		lseek(file, -buffer_size, SEEK_CUR);
-		read(file, buffer, buffer_size); ///////////////
-		
+		read(file, buffer, buffer_size);
 		destination_logical += write(write_in_file, buffer, buffer_size);
 		
 
 
 		data = lseek(file, offset, SEEK_DATA);
 		
-		
+		//if data = -1 then there is a problem with getting data from file
 		if(data == -1)
 		{
+			//if errno = ENXIO then there is no more data that we can find
 			if(errno == ENXIO)
 			{
+				//data = end file
 				data  = lseek(file, 0, SEEK_END);
-				//source_physical += data - hole;
 
-				
-				//destination_physical += lseek(write_in_file, data - hole, SEEK_END);
+				//in write_in_file we write holes from file
 				lseek(write_in_file, data - hole, SEEK_END);
 				destination_physical += data - hole;
 				
 				break;
 			}
+
+			//if errno != ENXIO then there is an another problem so we stop code
 			else
 			{
 				std::cout << "There is some error\n";
@@ -85,9 +90,6 @@ int main(int argc, char* argv[])
 		offset = data;
 		lseek(write_in_file, data - hole, SEEK_END);
 		destination_physical += data - hole;
-		//SEEK_DATA
-
-		//SEEK_HOLE
 	}
 	std::cout << "Source physical: " << source_physical << ", Source logical: " << source_logical;
 	std::cout << ", Destination physical: " << destination_physical;
