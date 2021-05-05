@@ -16,14 +16,14 @@ int main(int argc, char* argv[])
 	
 
 
-	//if there is file = -1 then there is a  problem and we can't open file  
+	//The file can't be opened due to an internal issue
 	if(file == -1)
 	{
 		std::cout << "I couldn't open file \n";
 		exit(errno);
 	}
 
-	//if there is write_in_file = -1 then there is a problem and we can't open file
+	//The file can't be opened due to an internal issue
 	int write_in_file = open(argv[2], O_WRONLY | O_TRUNC | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
 	if(write_in_file == -1)
 	{
@@ -41,14 +41,13 @@ int main(int argc, char* argv[])
 
 	while(true)
 	{
-		//we find where starts hole
+		//finding where hole starts
 		hole = lseek(file, offset, SEEK_HOLE);
 		source_physical  += hole - data;
 
 		//offset = from 0 to the hole start
 		offset = hole;
 
-		//create string
 		buffer_size = hole - data;
 		buffer = new char[buffer_size];
 
@@ -62,7 +61,7 @@ int main(int argc, char* argv[])
 
 		data = lseek(file, offset, SEEK_DATA);
 		
-		//if data = -1 then there is a problem with getting data from file
+		//The file can't be opened due to an internal issue
 		if(data == -1)
 		{
 			//if errno = ENXIO then there is no more data that we can find
